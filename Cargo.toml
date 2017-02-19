@@ -1,0 +1,13 @@
+[package]
+name = "float_guard"
+version = "0.0.1"
+authors = ["Jony <jonysy@users.noreply.github.com>"]
+keywords = ["mathematics", "numerics"]
+categories = ["no-std", "science"]
+license = "MIT/Apache-2.0"
+
+[dependencies]
+num = "0.1.36"
+
+[dev-dependencies]
+speculate = "0.0.24"
