@@ -1,12 +1,14 @@
 #![feature(plugin)]
 #![plugin(speculate)]
 
-extern crate float_guard;
+extern crate float;
 
-use float_guard::{Finite, FloatGuard};
+use float::{Finite, FloatGuard};
 
 speculate! {
+
     describe "A `FloatGuard on `f64`" {
+
         it "can construct (finite) `Self` via a conversion" {
             let f = FloatGuard::<f64, Finite>::try_from(1.0);
             assert!(f.is_ok());
@@ -24,6 +26,7 @@ speculate! {
         }
 
         describe "ordering" {
+
             before {
                 let x = FloatGuard::from(-1.0);
                 let y = FloatGuard::from(0.0);

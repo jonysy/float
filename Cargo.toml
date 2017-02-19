@@ -1,5 +1,5 @@
 [package]
-name = "float_guard"
+name = "float"
 version = "0.0.1"
 authors = ["Jony <jonysy@users.noreply.github.com>"]
 keywords = ["mathematics", "numerics"]
@@ -11,3 +11,4 @@ num = "0.1.36"
 
 [dev-dependencies]
 speculate = "0.0.24"
+ordered-float = "0.4.0"

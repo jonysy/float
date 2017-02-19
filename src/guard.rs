@@ -1,4 +1,4 @@
-use core::{cmp, fmt, iter, mem, ops};
+use core::{cmp, fmt, iter, ops};
 use super::{Error, Finite, Float, FpMarker, WithKind, Wrapped};
 
 ///  `FloatGuard` is a newtype with a floating-point type (such as `f32` and `f64`) as its 
@@ -31,11 +31,11 @@ impl<V> FloatGuard<V, Finite> where V: WithKind<Finite> {
 
     /// Try to construct `FloatGuard` from `value`.
     pub fn try_from(value: V) -> Result<Self, Error> {
-        if !value.is_finite() {
-            return Err(Error::NotFinite)
+        if value.is_finite() {
+            Ok(FloatGuard(value))
+        } else {
+            Err(Error::NotFinite)
         }
-
-        Ok(FloatGuard(value))
     }
 
     /// Construct a finite `FloatGuard` from an unchecked value.
@@ -120,7 +120,7 @@ impl<I> ops::Add for FloatGuard<I, Finite> where I: WithKind<Finite> {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self {
-        self.try_add(rhs).unwrap()
+        self.try_add(rhs).expect("`add` resulted in a non-finite value")
     }
 }
 
