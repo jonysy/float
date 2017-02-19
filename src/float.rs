@@ -11,3 +11,6 @@ impl<F, M> WithKind<M> for F where F: Float<M, Type = F>, M: super::FpMarker { }
 
 impl Float<super::Deflated> for f64 { type Type = f64; }
 impl Float<super::Finite> for f64 { type Type = f64; }
+
+impl Float<super::Deflated> for f32 { type Type = f32; }
+impl Float<super::Finite> for f32 { type Type = f32; }
