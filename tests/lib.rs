@@ -39,6 +39,13 @@ speculate! {
                 assert_eq!(x.eq(&y), false);
             }
 
+            it "can be compared to a regular float" {
+                assert_eq!(x < 0.0, true);
+                assert_eq!(x.lt(&0.0), true);
+                assert_eq!(y == -1.0, false);
+                assert_eq!(x.eq(&0.0), false);
+            }
+
             describe "min/max usage" {
                 use std::cmp;
 

@@ -160,7 +160,25 @@ impl<I> ops::Sub for FloatGuard<I, Finite> where I: WithKind<Finite> {
     }
 }
 
-impl<I> Ord for FloatGuard<I, Finite> where I: WithKind<Finite> {
+impl<I> cmp::PartialEq<I> for FloatGuard<I, Finite> where I: WithKind<Finite> {
+
+    fn eq(&self, other: &I) -> bool {
+        // TODO
+        let unchecked = unsafe { FloatGuard::from_unchecked(*other) };
+        self.eq(&unchecked)
+    }
+}
+
+impl<I> cmp::PartialOrd<I> for FloatGuard<I, Finite> where I: WithKind<Finite> {
+
+    fn partial_cmp(&self, other: &I) -> Option<cmp::Ordering> {
+        // TODO
+        let unchecked = unsafe { FloatGuard::from_unchecked(*other) };
+        self.partial_cmp(&unchecked)
+    }
+}
+
+impl<I> cmp::Ord for FloatGuard<I, Finite> where I: WithKind<Finite> {
 
     fn cmp(&self, other: &Self) -> cmp::Ordering {
         self.0.partial_cmp(&other.0).unwrap()
