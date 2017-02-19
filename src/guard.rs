@@ -1,4 +1,5 @@
-use core::{cmp, fmt, iter, ops};
+use core::{cmp, convert, fmt, iter, ops};
+use num;
 use super::{Error, Finite, Float, FpMarker, WithKind, Wrapped};
 
 ///  `FloatGuard` is a newtype with a floating-point type (such as `f32` and `f64`) as its 
@@ -81,7 +82,55 @@ impl<V> FloatGuard<V, Finite> where V: WithKind<Finite> {
     }
 }
 
-impl<V> Eq for FloatGuard<V, Finite> where V: WithKind<Finite> { }
+impl<V> cmp::Eq for FloatGuard<V, Finite> where V: WithKind<Finite> { }
+
+impl<I> cmp::PartialEq<I> for FloatGuard<I, Finite> where I: WithKind<Finite> {
+
+    fn eq(&self, other: &I) -> bool {
+        // TODO
+        let unchecked = unsafe { FloatGuard::from_unchecked(*other) };
+        self.eq(&unchecked)
+    }
+}
+
+impl<I> cmp::PartialOrd<I> for FloatGuard<I, Finite> where I: WithKind<Finite> {
+
+    fn partial_cmp(&self, other: &I) -> Option<cmp::Ordering> {
+        // TODO
+        let unchecked = unsafe { FloatGuard::from_unchecked(*other) };
+        self.partial_cmp(&unchecked)
+    }
+}
+
+impl<I> cmp::Ord for FloatGuard<I, Finite> where I: WithKind<Finite> {
+
+    fn cmp(&self, other: &Self) -> cmp::Ordering {
+        self.0.partial_cmp(&other.0).unwrap()
+    }
+}
+
+impl<V> convert::From<V> for FloatGuard<V, Finite> where V: WithKind<Finite> {
+
+    fn from(value: V) -> Self {
+        Self::try_from(value).unwrap()
+    }
+}
+
+impl<M> convert::Into<f32> for FloatGuard<f32, M> where f32: WithKind<M>, M: FpMarker {
+
+    fn into(self) -> f32 {
+        let FloatGuard(value) = self;
+        value
+    }
+}
+
+impl<M> convert::Into<f64> for FloatGuard<f64, M> where f64: WithKind<M>, M: FpMarker {
+
+    fn into(self) -> f64 {
+        let FloatGuard(value) = self;
+        value
+    }
+}
 
 impl<I, M> fmt::Display for FloatGuard<I, M> 
     where I: Float<M, Type = I> + fmt::Display, 
@@ -92,26 +141,57 @@ impl<I, M> fmt::Display for FloatGuard<I, M>
     }
 }
 
-impl<V> From<V> for FloatGuard<V, Finite> where V: WithKind<Finite> {
+#[allow(unused_variables)]
+impl<I> iter::Step for FloatGuard<I, Finite> where I: WithKind<Finite> {
 
-    fn from(value: V) -> Self {
-        Self::try_from(value).unwrap()
+    fn step(&self, by: &Self) -> Option<Self> {
+        self.try_add(*by).ok()
+    }
+
+    fn steps_between(start: &Self, end: &Self, by: &Self) -> Option<usize> {
+        unimplemented!()
+    }
+
+    fn steps_between_by_one(start: &Self, end: &Self) -> Option<usize> {
+        unimplemented!()
+    }
+
+    fn is_negative(&self) -> bool {
+        self.0.is_sign_negative()
+    }
+
+    fn replace_one(&mut self) -> Self {
+        unimplemented!()
+    }
+
+    fn replace_zero(&mut self) -> Self {
+        unimplemented!()
+    }
+
+    fn add_one(&self) -> Self {
+        self.try_add_float(I::one()).unwrap()
+    }
+
+    fn sub_one(&self) -> Self {
+        self.try_sub_float(I::one()).unwrap()
     }
 }
 
-impl<M> Into<f32> for FloatGuard<f32, M> where f32: WithKind<M>, M: FpMarker {
+impl<I> num::One for FloatGuard<I, Finite> where I: WithKind<Finite> {
 
-    fn into(self) -> f32 {
-        let FloatGuard(value) = self;
-        value
+    fn one() -> Self {
+        FloatGuard(I::one())
     }
 }
 
-impl<M> Into<f64> for FloatGuard<f64, M> where f64: WithKind<M>, M: FpMarker {
+impl<I> num::Zero for FloatGuard<I, Finite> where I: WithKind<Finite> {
 
-    fn into(self) -> f64 {
-        let FloatGuard(value) = self;
-        value
+    fn zero() -> Self {
+        FloatGuard(I::zero())
+    }
+
+    fn is_zero(&self) -> bool {
+        self.0.is_zero()
     }
 }
 
@@ -157,66 +237,5 @@ impl<I> ops::Sub for FloatGuard<I, Finite> where I: WithKind<Finite> {
 
     fn sub(self, rhs: Self) -> Self {
         self.try_sub(rhs).unwrap()
-    }
-}
-
-impl<I> cmp::PartialEq<I> for FloatGuard<I, Finite> where I: WithKind<Finite> {
-
-    fn eq(&self, other: &I) -> bool {
-        // TODO
-        let unchecked = unsafe { FloatGuard::from_unchecked(*other) };
-        self.eq(&unchecked)
-    }
-}
-
-impl<I> cmp::PartialOrd<I> for FloatGuard<I, Finite> where I: WithKind<Finite> {
-
-    fn partial_cmp(&self, other: &I) -> Option<cmp::Ordering> {
-        // TODO
-        let unchecked = unsafe { FloatGuard::from_unchecked(*other) };
-        self.partial_cmp(&unchecked)
-    }
-}
-
-impl<I> cmp::Ord for FloatGuard<I, Finite> where I: WithKind<Finite> {
-
-    fn cmp(&self, other: &Self) -> cmp::Ordering {
-        self.0.partial_cmp(&other.0).unwrap()
-    }
-}
-
-#[allow(unused_variables)]
-impl<I> iter::Step for FloatGuard<I, Finite> where I: WithKind<Finite> {
-
-    fn step(&self, by: &Self) -> Option<Self> {
-        self.try_add(*by).ok()
-    }
-
-    fn steps_between(start: &Self, end: &Self, by: &Self) -> Option<usize> {
-        unimplemented!()
-    }
-
-    fn steps_between_by_one(start: &Self, end: &Self) -> Option<usize> {
-        unimplemented!()
-    }
-
-    fn is_negative(&self) -> bool {
-        self.0.is_sign_negative()
-    }
-
-    fn replace_one(&mut self) -> Self {
-        unimplemented!()
-    }
-
-    fn replace_zero(&mut self) -> Self {
-        unimplemented!()
-    }
-
-    fn add_one(&self) -> Self {
-        self.try_add_float(I::one()).unwrap()
-    }
-
-    fn sub_one(&self) -> Self {
-        self.try_sub_float(I::one()).unwrap()
     }
 }
