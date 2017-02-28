@@ -47,6 +47,16 @@ speculate! {
             }
         }
 
+        describe "operators" {
+
+            it "implements `Neg`" {
+                let x = FloatGuard::from(1.0);
+                let y = 1.0;
+                assert_eq!(x, y);
+                assert_eq!(-x, -y);
+            }
+        }
+
         describe "ordering" {
 
             before {

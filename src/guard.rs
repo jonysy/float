@@ -17,9 +17,11 @@ pub struct FloatGuard<I = f64, M = Finite>(Wrapped<I, M>) where I: Float<M, Type
 
 impl<I, M> FloatGuard<I, M> where I: Float<M, Type = I>, M: FpMarker {
 
-    // pub fn cast<T>(self) -> FloatGuard<T, M> where T: WithKind<M> {
-    //     unimplemented!()
-    // }
+    /// Returns the smallest integer greater than or equal to a number.
+    #[inline]
+    pub fn ceil(self) -> Self {
+        FloatGuard(self.0.ceil())
+    }
 
     /// Returns the largest integer less than or equal to a number.
     #[inline]
@@ -73,6 +75,11 @@ impl<V> FloatGuard<V, Finite> where V: WithKind<Finite> {
     }
 
     /// Safely subtract
+    pub fn try_rem(self, other: Self) -> Result<Self, Error> where V: ops::Rem<Output = V> {
+        Self::try_from(ops::Rem::rem(self.0, other.0))
+    }
+
+    /// Safely subtract
     pub fn try_sub(self, other: Self) -> Result<Self, Error> where V: ops::Sub<Output = V> {
         Self::try_from(self.0 - other.0)
     }
@@ -106,6 +113,13 @@ impl<I> cmp::Ord for FloatGuard<I, Finite> where I: WithKind<Finite> {
 
     fn cmp(&self, other: &Self) -> cmp::Ordering {
         self.0.partial_cmp(&other.0).unwrap()
+    }
+}
+
+impl<I, M> convert::AsRef<I> for FloatGuard<I, M> where I: Float<M, Type = I>, M: FpMarker {
+
+    fn as_ref(&self) -> &I {
+        &self.0
     }
 }
 
@@ -177,10 +191,27 @@ impl<I> iter::Step for FloatGuard<I, Finite> where I: WithKind<Finite> {
     }
 }
 
+impl<I> num::NumCast for FloatGuard<I, Finite> where I: WithKind<Finite> {
+    fn from<T>(n: T) -> Option<Self> where T: num::ToPrimitive {
+        I::from(n).and_then(|n| FloatGuard::try_from(n).ok())
+    }
+}
+
 impl<I> num::One for FloatGuard<I, Finite> where I: WithKind<Finite> {
 
     fn one() -> Self {
         FloatGuard(I::one())
+    }
+}
+
+impl<I> num::ToPrimitive for FloatGuard<I, Finite> where I: WithKind<Finite> {
+
+    fn to_i64(&self) -> Option<i64> {
+        self.0.to_i64()
+    }
+
+    fn to_u64(&self) -> Option<u64> {
+        self.0.to_u64()
     }
 }
 
@@ -208,8 +239,24 @@ impl<'a, I> ops::Add for &'a FloatGuard<I, Finite> where I: WithKind<Finite> {
 
     type Output = FloatGuard<I, Finite>;
 
-    fn add(self, rhs: Self) -> Self::Output {
+    fn add(self, rhs: Self) -> FloatGuard<I, Finite> {
         self.try_add(*rhs).unwrap()
+    }
+}
+
+impl<I> ops::Add<I> for FloatGuard<I, Finite> where I: WithKind<Finite> {
+
+    type Output = Self;
+
+    fn add(self, rhs: I) -> Self {
+        self.try_add_float(rhs).unwrap()
+    }
+}
+
+impl<I> ops::AddAssign<I> for FloatGuard<I, Finite> where I: WithKind<Finite> {
+
+    fn add_assign(&mut self, rhs: I) {
+        *self = FloatGuard::try_from(self.0 + rhs).unwrap();
     }
 }
 
@@ -222,6 +269,15 @@ impl<I> ops::Div for FloatGuard<I, Finite> where I: WithKind<Finite> {
     }
 }
 
+impl<I> ops::Div<I> for FloatGuard<I, Finite> where I: WithKind<Finite> {
+
+    type Output = Self;
+
+    fn div(self, rhs: I) -> Self {
+        self.try_div_float(rhs).unwrap()
+    }
+}
+
 impl<I> ops::Mul for FloatGuard<I, Finite> where I: WithKind<Finite> {
 
     type Output = Self;
@@ -231,11 +287,38 @@ impl<I> ops::Mul for FloatGuard<I, Finite> where I: WithKind<Finite> {
     }
 }
 
+impl<I> ops::Neg for FloatGuard<I, Finite> where I: WithKind<Finite> {
+
+    type Output = Self;
+
+    fn neg(self) -> Self {
+        FloatGuard(self.0.neg())
+    }
+}
+
+impl<I> ops::Rem for FloatGuard<I, Finite> where I: WithKind<Finite> {
+
+    type Output = Self;
+
+    fn rem(self, rhs: Self) -> Self {
+        self.try_rem(rhs).unwrap()
+    }
+}
+
 impl<I> ops::Sub for FloatGuard<I, Finite> where I: WithKind<Finite> {
 
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self {
         self.try_sub(rhs).unwrap()
+    }
+}
+
+impl<I> ops::Sub<I> for FloatGuard<I, Finite> where I: WithKind<Finite> {
+
+    type Output = Self;
+
+    fn sub(self, rhs: I) -> Self {
+        self.try_sub_float(rhs).unwrap()
     }
 }

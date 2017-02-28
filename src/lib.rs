@@ -3,6 +3,10 @@
 
 extern crate num;
 
+// temporary
+extern crate nalgebra;
+mod temporary;
+
 pub use self::error::Error;
 pub use self::float::{Float, WithKind};
 pub use self::guard::FloatGuard;
